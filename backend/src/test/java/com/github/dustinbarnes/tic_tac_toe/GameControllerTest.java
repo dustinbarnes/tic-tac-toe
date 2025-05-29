@@ -30,14 +30,11 @@ public class GameControllerTest {
 
     @BeforeEach
     void setUp() {
-        playerX = new Player();
-        playerX.setName("Alice");
-        playerO = new Player();
-        playerO.setName("Bob");
+        playerX = new Player("1", "Alice");
+        playerO = new Player("2", "Bob");
     }
 
     @Test
-    @Disabled
     void createGame_returnsGameId() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/games"))
                 .andExpect(MockMvcResultMatchers.status().isOk())
@@ -45,7 +42,6 @@ public class GameControllerTest {
     }
 
     @Test
-    @Disabled
     void joinGame_assignsRoles() throws Exception {
         // Create game
         String gameId = mockMvc.perform(MockMvcRequestBuilders.post("/api/games"))
@@ -78,15 +74,21 @@ public class GameControllerTest {
         // Create game and join
         String gameId = mockMvc.perform(MockMvcRequestBuilders.post("/api/games"))
                 .andReturn().getResponse().getContentAsString();
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/join")
+        // Join as X and capture returned Player (with id)
+        String playerXJson = mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/join")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(playerX)));
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/join")
+                .content(objectMapper.writeValueAsString(playerX)))
+                .andReturn().getResponse().getContentAsString();
+        Player joinedX = objectMapper.readValue(playerXJson, Player.class);
+        // Join as O and capture returned Player (with id)
+        String playerOJson = mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/join")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(playerO)));
-        // Make move as X
+                .content(objectMapper.writeValueAsString(playerO)))
+                .andReturn().getResponse().getContentAsString();
+        Player joinedO = objectMapper.readValue(playerOJson, Player.class);
+        // Make move as X (use returned Player with id)
         Move move = new Move();
-        move.setPlayer(playerX);
+        move.setPlayer(joinedX);
         move.setRow(0);
         move.setCol(0);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/move")
@@ -101,7 +103,6 @@ public class GameControllerTest {
     }
 
     @Test
-    @Disabled("blah blah")
     void getMoves_returnsMoveHistory() throws Exception {
         // Create game and join
         String gameId = mockMvc.perform(MockMvcRequestBuilders.post("/api/games"))
@@ -129,7 +130,6 @@ public class GameControllerTest {
     }
 
     @Test
-    @Disabled
     void getStatus_returnsGameStatus() throws Exception {
         // Create game and join
         String gameId = mockMvc.perform(MockMvcRequestBuilders.post("/api/games"))
@@ -147,14 +147,12 @@ public class GameControllerTest {
     }
 
     @Test
-    @Disabled
     void getGame_notFound() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.get("/api/games/doesnotexist"))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
     }
 
     @Test
-    @Disabled
     void makeMove_invalidMove_returnsBadRequest() throws Exception {
         // Create game and join
         String gameId = mockMvc.perform(MockMvcRequestBuilders.post("/api/games"))

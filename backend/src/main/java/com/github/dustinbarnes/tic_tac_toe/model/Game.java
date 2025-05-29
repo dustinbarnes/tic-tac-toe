@@ -51,7 +51,7 @@ public class Game {
             System.out.println("Move rejected: Game is not in progress.");
             return false;
         }
-        if (player != playerX && player != playerO) {
+        if (!player.equals(playerX) && !player.equals(playerO)) {
             System.out.println("Move rejected: Player is not part of this game.");
             return false;
         }
