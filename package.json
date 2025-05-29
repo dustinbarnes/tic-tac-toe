@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "@nx/react": "^21.1.2",
+    "@nxrocks/nx-spring-boot": "^11.0.1"
+  }
+}
