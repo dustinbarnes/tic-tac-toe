@@ -38,18 +38,18 @@ public class GameController {
 
     // 4. Join an existing game
     @PostMapping("/{gameId}/join")
-    public ResponseEntity<Player.Role> joinGame(@PathVariable String gameId, @RequestBody Player player) {
+    public ResponseEntity<Player> joinGame(@PathVariable String gameId, @RequestBody Player player) {
         Game game = games.get(gameId);
         if (game == null) return ResponseEntity.notFound().build();
         // Assign player to X or O if available
         if (game.getPlayerX() == null) {
             player.setRole(Player.Role.X);
             game.setPlayerX(player);
-            return ResponseEntity.ok(player.getRole());
+            return ResponseEntity.ok(player);
         } else if (game.getPlayerO() == null) {
             player.setRole(Player.Role.O);
             game.setPlayerO(player);
-            return ResponseEntity.ok(player.getRole());
+            return ResponseEntity.ok(player);
         } else {
             return ResponseEntity.badRequest().body(null);
         }
@@ -57,19 +57,22 @@ public class GameController {
 
     // 5. Make a move
     @PostMapping("/{gameId}/move")
-    public ResponseEntity<String> makeMove(@PathVariable String gameId, @RequestBody Move move) {
+    public ResponseEntity<Game> makeMove(@PathVariable String gameId, @RequestBody Move move) {
         Game game = games.get(gameId);
         if (game == null) return ResponseEntity.notFound().build();
-        // TODO: Apply move to game
-        return ResponseEntity.ok("Move accepted");
+        boolean success = game.addMove(move);
+        if (!success) {
+            return ResponseEntity.badRequest().body(null);
+        }
+        return ResponseEntity.ok(game);
     }
 
     // 6. Get move history
     @GetMapping("/{gameId}/moves")
-    public ResponseEntity<List<Object>> getMoves(@PathVariable String gameId) {
-        // TODO: Return move history
-        if (!games.containsKey(gameId)) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok(Collections.emptyList());
+    public ResponseEntity<List<Move>> getMoves(@PathVariable String gameId) {
+        Game game = games.get(gameId);
+        if (game == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(game.getMoves());
     }
 
     // 7. Get game status

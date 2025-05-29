@@ -47,7 +47,28 @@ public class Game {
         Player player = move.getPlayer();
 
         // Only allow move if game is started, cell is empty, game is not over, and player is valid
-        if (!"IN_PROGRESS".equals(this.status) || (player != playerX && player != playerO) || row < 0 || row > 2 || col < 0 || col > 2 || board[row][col] != null || isWin() || isDraw()) {
+        if (!"IN_PROGRESS".equals(this.status)) {
+            System.out.println("Move rejected: Game is not in progress.");
+            return false;
+        }
+        if (player != playerX && player != playerO) {
+            System.out.println("Move rejected: Player is not part of this game.");
+            return false;
+        }
+        if (row < 0 || row > 2 || col < 0 || col > 2) {
+            System.out.println("Move rejected: Row or column out of bounds.");
+            return false;
+        }
+        if (board[row][col] != null) {
+            System.out.println("Move rejected: Cell is already occupied.");
+            return false;
+        }
+        if (isWin()) {
+            System.out.println("Move rejected: Game already has a winner.");
+            return false;
+        }
+        if (isDraw()) {
+            System.out.println("Move rejected: Game is a draw.");
             return false;
         }
         
@@ -80,21 +101,21 @@ public class Game {
         if (winner != null) return winner;
         // Check rows and columns
         for (int i = 0; i < 3; i++) {
-            if (board[i][0] != null && board[i][0] == board[i][1] && board[i][1] == board[i][2]) {
+            if (board[i][0] != null && board[i][0].equals(board[i][1]) && board[i][1].equals(board[i][2])) {
                 winner = board[i][0];
                 return winner;
             }
-            if (board[0][i] != null && board[0][i] == board[1][i] && board[1][i] == board[2][i]) {
+            if (board[0][i] != null && board[0][i].equals(board[1][i]) && board[1][i].equals(board[2][i])) {
                 winner = board[0][i];
                 return winner;
             }
         }
         // Check diagonals
-        if (board[0][0] != null && board[0][0] == board[1][1] && board[1][1] == board[2][2]) {
+        if (board[0][0] != null && board[0][0].equals(board[1][1]) && board[1][1].equals(board[2][2])) {
             winner = board[0][0];
             return winner;
         }
-        if (board[0][2] != null && board[0][2] == board[1][1] && board[1][1] == board[2][0]) {
+        if (board[0][2] != null && board[0][2].equals(board[1][1]) && board[1][1].equals(board[2][0])) {
             winner = board[0][2];
             return winner;
         }
