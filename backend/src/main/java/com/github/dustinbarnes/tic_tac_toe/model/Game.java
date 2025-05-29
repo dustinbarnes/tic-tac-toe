@@ -3,8 +3,11 @@ package com.github.dustinbarnes.tic_tac_toe.model;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Game {
+    private static final Logger logger = LoggerFactory.getLogger(Game.class);
     private String id;
     private Player playerX;
     private Player playerO;
@@ -48,37 +51,46 @@ public class Game {
 
         // Only allow move if game is started, cell is empty, game is not over, and player is valid
         if (!"IN_PROGRESS".equals(this.status)) {
-            System.out.println("Move rejected: Game is not in progress.");
+            logger.warn("Move rejected: Game is not in progress. GameId={}, Player={}", id, player);
             return false;
         }
         if (!player.equals(playerX) && !player.equals(playerO)) {
-            System.out.println("Move rejected: Player is not part of this game.");
+            logger.warn("Move rejected: Player is not part of this game. GameId={}, Player={}", id, player);
+            return false;
+        }
+        // Enforce turn order: only the expected player can move
+        Player expectedPlayer = getNextTurn();
+        if (!player.equals(expectedPlayer)) {
+            logger.warn("Move rejected: Not this player's turn. GameId={}, Player={}, ExpectedPlayer={}", id, player, expectedPlayer);
             return false;
         }
         if (row < 0 || row > 2 || col < 0 || col > 2) {
-            System.out.println("Move rejected: Row or column out of bounds.");
+            logger.warn("Move rejected: Row or column out of bounds. GameId={}, Player={}, Row={}, Col={}", id, player, row, col);
             return false;
         }
         if (board[row][col] != null) {
-            System.out.println("Move rejected: Cell is already occupied.");
+            logger.warn("Move rejected: Cell is already occupied. GameId={}, Player={}, Row={}, Col={}", id, player, row, col);
             return false;
         }
         if (isWin()) {
-            System.out.println("Move rejected: Game already has a winner.");
+            logger.warn("Move rejected: Game already has a winner. GameId={}, Player={}", id, player);
             return false;
         }
         if (isDraw()) {
-            System.out.println("Move rejected: Game is a draw.");
+            logger.warn("Move rejected: Game is a draw. GameId={}, Player={}", id, player);
             return false;
         }
         
         board[row][col] = player;
         moves.add(move);
+        logger.info("Move accepted: GameId={}, Player={}, Row={}, Col={}", id, player, row, col);
         // Check for winner after move
         if (getWinner() != null) {
             this.status = "WINNER";
+            logger.info("Game won: GameId={}, Winner={}", id, getWinner());
         } else if (isDraw()) {
             this.status = "DRAW";
+            logger.info("Game draw: GameId={}", id);
         }
         return true;
     }

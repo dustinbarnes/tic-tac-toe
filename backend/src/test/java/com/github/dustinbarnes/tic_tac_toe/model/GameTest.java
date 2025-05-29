@@ -100,11 +100,11 @@ public class GameTest {
         game.addMove(new Move(0, 0, playerX));
         game.addMove(new Move(0, 1, playerO));
         game.addMove(new Move(0, 2, playerX));
-        game.addMove(new Move(1, 0, playerX));
         game.addMove(new Move(1, 1, playerO));
+        game.addMove(new Move(1, 0, playerX));
         game.addMove(new Move(1, 2, playerO));
-        game.addMove(new Move(2, 0, playerO));
         game.addMove(new Move(2, 1, playerX));
+        game.addMove(new Move(2, 0, playerO));
         game.addMove(new Move(2, 2, playerX));
         assertTrue(game.isDraw());
         assertEquals("DRAW", game.getStatus());

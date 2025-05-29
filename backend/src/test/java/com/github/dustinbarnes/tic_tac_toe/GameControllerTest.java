@@ -177,4 +177,57 @@ public class GameControllerTest {
                 .content(objectMapper.writeValueAsString(move)))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
+
+    @Test
+    void makeMove_oMovesFirst_returnsBadRequest() throws Exception {
+        // Create game and join
+        String gameId = mockMvc.perform(MockMvcRequestBuilders.post("/api/games"))
+                .andReturn().getResponse().getContentAsString();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(playerX)));
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(playerO)));
+        // O tries to move first
+        Move move = new Move();
+        move.setPlayer(playerO);
+        move.setRow(0);
+        move.setCol(0);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/move")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(move)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
+
+    @Test
+    void makeMove_xMovesTwiceInARow_returnsBadRequest() throws Exception {
+        // Create game and join
+        String gameId = mockMvc.perform(MockMvcRequestBuilders.post("/api/games"))
+                .andReturn().getResponse().getContentAsString();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(playerX)));
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/join")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(playerO)));
+        // X moves
+        Move move1 = new Move();
+        move1.setPlayer(playerX);
+        move1.setRow(0);
+        move1.setCol(0);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/move")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(move1)))
+                .andExpect(MockMvcResultMatchers.status().isOk());
+        // X tries to move again
+        Move move2 = new Move();
+        move2.setPlayer(playerX);
+        move2.setRow(0);
+        move2.setCol(1);
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/move")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(move2)))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+    }
 }

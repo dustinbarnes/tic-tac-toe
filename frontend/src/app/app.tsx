@@ -85,6 +85,11 @@ export default function App() {
     if (res.ok) {
       const g = await res.json();
       setGame(g);
+    } else {
+      // If the game is not found or another error, return to game list
+      setGame(null);
+      setPlayer(null);
+      setMessage('Game not found or no longer available.');
     }
   }
 
@@ -140,6 +145,15 @@ export default function App() {
   // Fetch games after user is created
   useEffect(() => {
     if (user && !game) fetchGames();
+  }, [user, game]);
+
+  // Poll for available games if on the game list screen
+  useEffect(() => {
+    if (user && !game) {
+      fetchGames();
+      const interval = setInterval(fetchGames, 2000);
+      return () => clearInterval(interval);
+    }
   }, [user, game]);
 
   // Persist user in localStorage
@@ -216,6 +230,11 @@ export default function App() {
         <p>Status: {game.status}</p>
         <Board board={game.board} onCellClick={makeMove} canMove={!!player && game.status === 'IN_PROGRESS'} />
         <div style={{ margin: '1rem 0' }}>
+          <b>Players:</b>
+          <ul style={{ listStyle: 'none', padding: 0, margin: '0.5rem 0' }}>
+            <li>{game.playerX ? `X: ${game.playerX.name}` : 'X: (waiting...)'}</li>
+            <li>{game.playerO ? `O: ${game.playerO.name}` : 'O: (waiting...)'}</li>
+          </ul>
           {player ? (
             <span>You are {player.name} ({player.role})</span>
           ) : (
