@@ -85,11 +85,24 @@ public class Game {
         moves.add(move);
         logger.info("Move accepted: GameId={}, Player={}, Row={}, Col={}", id, player, row, col);
         // Check for winner after move
-        if (getWinner() != null) {
-            this.status = "WINNER";
-            logger.info("Game won: GameId={}, Winner={}", id, getWinner());
+        Player winner = getWinner();
+        if (winner != null) {
+            if (winner.getRole() == Player.Role.X) {
+                this.status = "X_WON";
+                if (playerX != null) playerX.setWins(playerX.getWins() + 1);
+                if (playerO != null) playerO.setLosses(playerO.getLosses() + 1);
+            } else if (winner.getRole() == Player.Role.O) {
+                this.status = "O_WON";
+                if (playerO != null) playerO.setWins(playerO.getWins() + 1);
+                if (playerX != null) playerX.setLosses(playerX.getLosses() + 1);
+            } else {
+                this.status = "WINNER";
+            }
+            logger.info("Game won: GameId={}, Winner={}, Status={}", id, winner, this.status);
         } else if (isDraw()) {
             this.status = "DRAW";
+            if (playerX != null) playerX.setDraws(playerX.getDraws() + 1);
+            if (playerO != null) playerO.setDraws(playerO.getDraws() + 1);
             logger.info("Game draw: GameId={}", id);
         }
         return true;

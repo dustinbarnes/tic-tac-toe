@@ -111,4 +111,30 @@ public class GameController {
         }
         return ResponseEntity.ok(game.getStatus());
     }
+
+    // 8. Get player stats by id
+    @GetMapping("/player/{playerId}/stats")
+    public ResponseEntity<Map<String, Integer>> getPlayerStats(@PathVariable String playerId) {
+        // Search all games for this player and aggregate stats
+        int wins = 0, losses = 0, draws = 0;
+        for (Game game : games.values()) {
+            Player x = game.getPlayerX();
+            Player o = game.getPlayerO();
+            if (x != null && playerId.equals(x.getId())) {
+                wins += x.getWins();
+                losses += x.getLosses();
+                draws += x.getDraws();
+            }
+            if (o != null && playerId.equals(o.getId())) {
+                wins += o.getWins();
+                losses += o.getLosses();
+                draws += o.getDraws();
+            }
+        }
+        Map<String, Integer> stats = new HashMap<>();
+        stats.put("wins", wins);
+        stats.put("losses", losses);
+        stats.put("draws", draws);
+        return ResponseEntity.ok(stats);
+    }
 }

@@ -7,6 +7,10 @@ public class Player {
     private String name;
     private Role role;
 
+    private int wins = 0;
+    private int losses = 0;
+    private int draws = 0;
+
     public Player() {}
 
     public Player(String id, String name) {
@@ -37,6 +41,13 @@ public class Player {
     public void setRole(Role role) {
         this.role = role;
     }
+
+    public int getWins() { return wins; }
+    public void setWins(int wins) { this.wins = wins; }
+    public int getLosses() { return losses; }
+    public void setLosses(int losses) { this.losses = losses; }
+    public int getDraws() { return draws; }
+    public void setDraws(int draws) { this.draws = draws; }
 
     @Override
     public boolean equals(Object o) {

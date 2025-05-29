@@ -22,6 +22,12 @@ interface Game {
   playerO: Player | null;
   moves: Move[];
 }
+// Add a new type for player stats
+interface PlayerStats {
+  wins: number;
+  losses: number;
+  draws: number;
+}
 
 const API = 'http://localhost:8080/api/games';
 
@@ -40,6 +46,11 @@ export default function App() {
   // List of available games (with player name)
   const [games, setGames] = useState<{ id: string; playerName: string }[]>([]);
   const [loadingGames, setLoadingGames] = useState(false);
+  // List of recently finished games
+  const [finishedGames, setFinishedGames] = useState<{ id: string; winner: string | null; status: string }[]>([]);
+  const [loadingFinished, setLoadingFinished] = useState(false);
+  // Player stats state
+  const [playerStats, setPlayerStats] = useState<PlayerStats>({ wins: 0, losses: 0, draws: 0 });
 
   // Create a new game
   async function createGame() {
@@ -124,6 +135,7 @@ export default function App() {
         const ids = await res.json();
         // Fetch each game's status and filter by WAITING, include player name
         const filtered: { id: string; playerName: string }[] = [];
+        const finished: { id: string; winner: string | null; status: string }[] = [];
         await Promise.all(
           ids.map(async (gid: string) => {
             const gres = await fetch(`${API}/${gid}`);
@@ -131,16 +143,39 @@ export default function App() {
               const g = await gres.json();
               if (g.status === 'WAITING' && g.playerX && g.playerX.name) {
                 filtered.push({ id: gid, playerName: g.playerX.name });
+              } else if (g.status === 'DRAW' || g.status === 'WINNER' || g.status === 'X_WON' || g.status === 'O_WON') {
+                let winner = null;
+                if (g.status === 'WINNER' && g.winner && g.winner.name) winner = g.winner.name;
+                if (g.status === 'X_WON' && g.playerX && g.playerX.name) winner = g.playerX.name;
+                if (g.status === 'O_WON' && g.playerO && g.playerO.name) winner = g.playerO.name;
+                finished.push({ id: gid, winner, status: g.status });
               }
             }
           })
         );
         setGames(filtered);
+        // Sort finished games by most recent (highest id, assuming UUIDs are sortable; otherwise, just reverse)
+        setFinishedGames(finished.reverse());
       }
     } finally {
       setLoadingGames(false);
+      setLoadingFinished(false);
     }
   }
+
+  // Fetch player stats from backend
+  async function fetchPlayerStats(playerId: string) {
+    const res = await fetch(`${API}/player/${playerId}/stats`);
+    if (res.ok) {
+      const stats = await res.json();
+      setPlayerStats(stats);
+    }
+  }
+
+  // Fetch player stats when user or finishedGames changes
+  useEffect(() => {
+    if (user) fetchPlayerStats(user.id);
+  }, [user, finishedGames]);
 
   // Fetch games after user is created
   useEffect(() => {
@@ -199,6 +234,13 @@ export default function App() {
     return (
       <div style={{ maxWidth: 400, margin: '2rem auto', textAlign: 'center' }}>
         <h1>Welcome, {user.name}!</h1>
+        {/* Player stats box */}
+        <div style={{ border: '1px solid #aaa', borderRadius: 8, padding: 12, marginBottom: 16, background: '#f9f9f9' }}>
+          <b>Your Record</b>
+          <div>Wins: {playerStats.wins}</div>
+          <div>Losses: {playerStats.losses}</div>
+          <div>Draws: {playerStats.draws}</div>
+        </div>
         <button onClick={createGame}>Create New Game</button>
         <hr />
         <h2>Join a Game</h2>
@@ -211,6 +253,21 @@ export default function App() {
             <li key={g.id} style={{ margin: '0.5rem 0' }}>
               <button onClick={() => joinGame(g.id, user.name)} style={{ width: '100%' }}>
                 Join {g.playerName}'s Game ({g.id})
+              </button>
+            </li>
+          ))}
+        </ul>
+        <hr />
+        <h2>Recently Finished Games</h2>
+        <button onClick={fetchGames} disabled={loadingFinished} style={{ marginBottom: 8 }}>
+          {loadingFinished ? 'Loading...' : 'Refresh List'}
+        </button>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          {finishedGames.length === 0 && <li>No finished games yet.</li>}
+          {finishedGames.map((g) => (
+            <li key={g.id} style={{ margin: '0.5rem 0' }}>
+              <button onClick={() => fetchGame(g.id)} style={{ width: '100%' }}>
+                {g.status === 'DRAW' ? `Draw (${g.id})` : `Winner: ${g.winner || 'Unknown'} (${g.id})`}
               </button>
             </li>
           ))}
@@ -237,9 +294,7 @@ export default function App() {
           </ul>
           {player ? (
             <span>You are {player.name} ({player.role})</span>
-          ) : (
-            <JoinGameForm onJoin={joinGame} joining={joining} defaultName={user.name} />
-          )}
+          ) : null}
         </div>
         <button onClick={() => fetchGame(game.id)}>Refresh</button>
         <button onClick={() => { setGame(null); setPlayer(null); setMessage(''); }}>Back</button>
@@ -270,25 +325,5 @@ function Board({ board, onCellClick, canMove }: { board: (Player | null)[][], on
         ))}
       </tbody>
     </table>
-  );
-}
-
-// Update JoinGameForm to accept defaultName
-function JoinGameForm({ onJoin, joining, defaultName }: { onJoin: (gameId: string, name: string) => void, joining: boolean, defaultName?: string }) {
-  const [gameId, setGameId] = useState('');
-  const [name, setName] = useState(defaultName || '');
-  useEffect(() => { setName(defaultName || ''); }, [defaultName]);
-  return (
-    <form
-      onSubmit={e => {
-        e.preventDefault();
-        if (gameId && name) onJoin(gameId, name);
-      }}
-      style={{ margin: '1rem 0' }}
-    >
-      <input placeholder="Game ID" value={gameId} onChange={e => setGameId(e.target.value)} disabled={joining} />
-      <input placeholder="Your Name" value={name} onChange={e => setName(e.target.value)} disabled={joining} />
-      <button type="submit" disabled={joining}>Join Game</button>
-    </form>
   );
 }
