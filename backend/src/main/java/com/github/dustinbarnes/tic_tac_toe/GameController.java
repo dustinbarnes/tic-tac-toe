@@ -1,5 +1,8 @@
 package com.github.dustinbarnes.tic_tac_toe;
 
+import com.github.dustinbarnes.tic_tac_toe.model.Game;
+import com.github.dustinbarnes.tic_tac_toe.model.Player;
+import com.github.dustinbarnes.tic_tac_toe.model.Move;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
@@ -35,17 +38,27 @@ public class GameController {
 
     // 4. Join an existing game
     @PostMapping("/{gameId}/join")
-    public ResponseEntity<String> joinGame(@PathVariable String gameId, @RequestParam String player) {
-        // TODO: Add player to game
-        if (!games.containsKey(gameId)) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok("Player joined");
+    public ResponseEntity<String> joinGame(@PathVariable String gameId, @RequestBody Player player) {
+        Game game = games.get(gameId);
+        if (game == null) return ResponseEntity.notFound().build();
+        // Assign player to X or O if available
+        if (game.getPlayerX() == null) {
+            game.setPlayerX(player);
+            return ResponseEntity.ok("Player joined as X");
+        } else if (game.getPlayerO() == null) {
+            game.setPlayerO(player);
+            return ResponseEntity.ok("Player joined as O");
+        } else {
+            return ResponseEntity.badRequest().body("Game is full");
+        }
     }
 
     // 5. Make a move
     @PostMapping("/{gameId}/move")
-    public ResponseEntity<String> makeMove(@PathVariable String gameId, @RequestBody Map<String, Object> move) {
+    public ResponseEntity<String> makeMove(@PathVariable String gameId, @RequestBody Move move) {
+        Game game = games.get(gameId);
+        if (game == null) return ResponseEntity.notFound().build();
         // TODO: Apply move to game
-        if (!games.containsKey(gameId)) return ResponseEntity.notFound().build();
         return ResponseEntity.ok("Move accepted");
     }
 

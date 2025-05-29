@@ -1,4 +1,4 @@
-package com.github.dustinbarnes.tic_tac_toe;
+package com.github.dustinbarnes.tic_tac_toe.model;
 
 public class Player {
     private String id;
