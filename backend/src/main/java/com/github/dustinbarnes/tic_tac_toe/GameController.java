@@ -38,18 +38,20 @@ public class GameController {
 
     // 4. Join an existing game
     @PostMapping("/{gameId}/join")
-    public ResponseEntity<String> joinGame(@PathVariable String gameId, @RequestBody Player player) {
+    public ResponseEntity<Player.Role> joinGame(@PathVariable String gameId, @RequestBody Player player) {
         Game game = games.get(gameId);
         if (game == null) return ResponseEntity.notFound().build();
         // Assign player to X or O if available
         if (game.getPlayerX() == null) {
+            player.setRole(Player.Role.X);
             game.setPlayerX(player);
-            return ResponseEntity.ok("Player joined as X");
+            return ResponseEntity.ok(player.getRole());
         } else if (game.getPlayerO() == null) {
+            player.setRole(Player.Role.O);
             game.setPlayerO(player);
-            return ResponseEntity.ok("Player joined as O");
+            return ResponseEntity.ok(player.getRole());
         } else {
-            return ResponseEntity.badRequest().body("Game is full");
+            return ResponseEntity.badRequest().body(null);
         }
     }
 
@@ -73,8 +75,8 @@ public class GameController {
     // 7. Get game status
     @GetMapping("/{gameId}/status")
     public ResponseEntity<String> getStatus(@PathVariable String gameId) {
-        // TODO: Return game status
-        if (!games.containsKey(gameId)) return ResponseEntity.notFound().build();
-        return ResponseEntity.ok("IN_PROGRESS");
+        Game game = games.get(gameId);
+        if (game == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(game.getStatus());
     }
 }
