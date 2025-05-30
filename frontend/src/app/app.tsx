@@ -2,32 +2,9 @@
 // import styles from './app.module.css';
 import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-
-// Types
-interface Player {
-  id: string;
-  name: string;
-  role: 'X' | 'O';
-}
-interface Move {
-  row: number;
-  col: number;
-  player: Player;
-}
-interface Game {
-  id: string;
-  board: (Player | null)[][];
-  status: string;
-  playerX: Player | null;
-  playerO: Player | null;
-  moves: Move[];
-}
-// Add a new type for player stats
-interface PlayerStats {
-  wins: number;
-  losses: number;
-  draws: number;
-}
+import { Player, Move, Game, PlayerStats } from './types';
+// Add import for React Router
+import { BrowserRouter as Router, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 
 const API = 'http://localhost:8080/api/games';
 
@@ -35,7 +12,25 @@ function emptyBoard() {
   return Array(3).fill(null).map(() => Array(3).fill(null));
 }
 
-export default function App() {
+// Main App wrapper with router
+function AppWrapper() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/game/:id" element={<AppWithGameId />} />
+        <Route path="*" element={<App />} />
+      </Routes>
+    </Router>
+  );
+}
+
+function AppWithGameId() {
+  const { id } = useParams();
+  return <App initialGameId={id} />;
+}
+
+// App component now accepts initialGameId
+function App({ initialGameId }: { initialGameId?: string } = {}) {
   const [user, setUserState] = useState<{ id: string; name: string } | null>(null);
   const [username, setUsername] = useState('');
   const [game, setGame] = useState<Game | null>(null);
@@ -273,7 +268,7 @@ export default function App() {
           ))}
         </ul>
         <button onClick={() => { setUserState(null); localStorage.removeItem('ttt-user'); setUsername(''); }}>Log out</button>
-        <p>{message}</p>
+        <p className="message">{message}</p>
       </div>
     );
   }
@@ -298,7 +293,7 @@ export default function App() {
         </div>
         <button onClick={() => fetchGame(game.id)}>Refresh</button>
         <button onClick={() => { setGame(null); setPlayer(null); setMessage(''); }}>Back</button>
-        <p>{message}</p>
+        <p className="message">{message}</p>
       </div>
     );
   }
@@ -307,23 +302,67 @@ export default function App() {
 }
 
 function Board({ board, onCellClick, canMove }: { board: (Player | null)[][], onCellClick: (row: number, col: number) => void, canMove: boolean }) {
+  // Find winning line if any
+  function getWinningLine(): [number, number][] | null {
+    // Rows
+    for (let i = 0; i < 3; i++) {
+      if (board[i][0] && board[i][0] === board[i][1] && board[i][1] === board[i][2]) {
+        return [[i, 0], [i, 1], [i, 2]];
+      }
+    }
+    // Columns
+    for (let j = 0; j < 3; j++) {
+      if (board[0][j] && board[0][j] === board[1][j] && board[1][j] === board[2][j]) {
+        return [[0, j], [1, j], [2, j]];
+      }
+    }
+    // Diagonals
+    if (board[0][0] && board[0][0] === board[1][1] && board[1][1] === board[2][2]) {
+      return [[0, 0], [1, 1], [2, 2]];
+    }
+    if (board[0][2] && board[0][2] === board[1][1] && board[1][1] === board[2][0]) {
+      return [[0, 2], [1, 1], [2, 0]];
+    }
+    return null;
+  }
+  const winningLine = getWinningLine();
+
+  // For overlay, render just the table
   return (
-    <table style={{ margin: '1rem auto', borderCollapse: 'collapse' }}>
-      <tbody>
-        {board.map((row, i) => (
-          <tr key={i}>
-            {row.map((cell, j) => (
-              <td
-                key={j}
-                style={{ width: 60, height: 60, border: '1px solid #333', fontSize: 32, textAlign: 'center', cursor: canMove && !cell ? 'pointer' : 'default', background: cell ? '#f0f0f0' : '#fff' }}
-                onClick={() => canMove && !cell && onCellClick(i, j)}
-              >
-                {cell ? cell.role : ''}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div style={{ position: 'relative', width: 180, height: 180, margin: '1rem auto' }}>
+      <table style={{ borderCollapse: 'collapse', position: 'absolute', left: 0, top: 0 }}>
+        <tbody>
+          {board.map((row, i) => (
+            <tr key={i}>
+              {row.map((cell, j) => {
+                const isWinning = winningLine?.some(([wi, wj]) => wi === i && wj === j);
+                return (
+                  <td
+                    key={j}
+                    style={{
+                      width: 60,
+                      height: 60,
+                      border: '1px solid #333',
+                      fontSize: 32,
+                      textAlign: 'center',
+                      cursor: canMove && !cell ? 'pointer' : 'default',
+                      background: cell ? '#f0f0f0' : '#fff',
+                      position: 'relative',
+                      color: isWinning ? '#d32f2f' : undefined,
+                      fontWeight: isWinning ? 'bold' : undefined,
+                    }}
+                    onClick={() => canMove && !cell && onCellClick(i, j)}
+                  >
+                    {cell ? cell.role : ''}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
+
+export default AppWrapper;

@@ -211,6 +211,7 @@ public class GameControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/games/" + gameId + "/join")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(playerO)));
+                
         // X moves
         Move move1 = new Move();
         move1.setPlayer(playerX);

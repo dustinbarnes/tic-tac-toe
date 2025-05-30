@@ -6,7 +6,7 @@ This is a monorepo project:
     - Uses Maven
     - Uses Spring Boot
   - `/frontend` contains an NPM project that builds the UI based on React
-  - `/tests` contains Playwright tests
+  - `/frontend-e2e` contains Playwright tests
 
 This project uses `nx` as the top-level build tool
 

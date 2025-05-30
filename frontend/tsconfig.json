@@ -1,5 +1,8 @@
 {
   "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "jsx": "react-jsx",
     "allowJs": false,
     "esModuleInterop": false,
@@ -16,6 +19,5 @@
     {
       "path": "./tsconfig.spec.json"
     }
-  ],
-  "extends": "../tsconfig.base.json"
+  ]
 }

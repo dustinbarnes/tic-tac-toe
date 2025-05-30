@@ -1,12 +1,10 @@
-.nx/installation
-.nx/cache
-.nx/workspace-data
-
+# Ignore build artifacts
+dist/
 target/
 
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
+# Ignore dependency directories
 node_modules
 
+# Ignore logs
 vite.config.*.timestamp*
 vitest.config.*.timestamp*

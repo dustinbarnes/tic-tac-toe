@@ -29,7 +29,7 @@ public class GameController {
     // 2. Get the current state of a specific game
     @GetMapping("/{gameId}")
     public ResponseEntity<Object> getGame(@PathVariable String gameId) {
-        logger.info("Fetching game state for id: {}", gameId);
+        // logger.info("Fetching game state for id: {}", gameId);
         Game game = games.get(gameId);
         if (game == null) {
             logger.warn("Game not found: {}", gameId);
@@ -41,7 +41,7 @@ public class GameController {
     // 3. List all games
     @GetMapping
     public ResponseEntity<Set<String>> listGames() {
-        logger.info("Listing all game ids");
+        // logger.info("Listing all game ids");
         return ResponseEntity.ok(games.keySet());
     }
 
